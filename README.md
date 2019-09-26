@@ -33,13 +33,17 @@ Keywords: Precision agriculture; Ordinary kriging; Clustering analysis; Yield ma
 ************************************************************
 Version : 1.2
 - The function for automatic calculate the contour was removed. The user need to enter with limite coordinates.
+
 - Add option to define the delimitter of dataset file and if coordinate system is metric (UTM) or geodesic (Latitude/Longitude).
 
 Dataset and limit file need to using the same delimitter and the same coordinate sytem (Latitude/Longitude or UTM). 
 
 - Function to embedded matplotlib graphics in PyQt was inserted
+
 - A bug in gauss function was adjusted.
+
 - Pandas function was used to read and write files
+
 - The clustering function was change to k-means, using scikit-learn python module
 
 
@@ -47,11 +51,17 @@ Dataset and limit file need to using the same delimitter and the same coordinate
 Tips for use
 
 -The result files it is save in a Res Directory.
+
 -It is recommend create this directory, in the projetc directory
+
 -Before click in select dataset and select limite file, the delimitter need to be selected
+
 -It is necessary informe if dataset coordinate already it is UTM
+
 -The limite file and dataset file need to have a header.
+
 -In limite file, first column need to be longitude (or coordinate e-w) 
+
 -In limite file,second column need to be latitude (or coordinate n-s)
 
 **********************************************************
@@ -90,7 +100,6 @@ Or antoher python compiler
 
 Oficial python IDE : apt-get install idle3
 
-Anaconda: Search how to install tha Anacond Spyder in your distro.
 -----------------------------------------------
 In Windows and Linux OS is necessary install specific python modules for use the software developed. For this, 
 it is necessary to use the pip comand of python. 
@@ -191,7 +200,8 @@ The scikit-learn module it is used
 -----------------------------------------------
 DAGApy.ipynb 
 
-File for use software in Anaconda Jupyter Notebook
+File for used Anaconda Jupyter Notebook
+
 -----------------------------------------------
 filtering.py
 
