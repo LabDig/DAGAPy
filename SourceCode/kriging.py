@@ -197,7 +197,6 @@ def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): #
                 maxdist=dist
 
     # Generate the experimental semivariogram
-    print ("Running experimental and theorical semivargiogram...")
     gamma=np.zeros(kk)
     lag=np.zeros(kk)
     num=np.zeros(kk)
@@ -219,15 +218,16 @@ def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): #
     Model="spherical"
     #Pick a random initial value for the nugget
     Nugget=(gamma[1]*lag[0]-gamma[0]*lag[1])/(lag[0]-lag[1])
-    if Nugget<0:
-        Nugget=gamma[0]
+    if Nugget<0: Nugget=gamma[0]
     #Pick a random initial value for the sill
     Sill=(gamma[kk-4]+gamma[kk-3]+gamma[kk-2]+gamma[kk-1])/4.0             
     #kick the starting value for the range
-    Range=lag[6]                                                            
-    init_vals = [Nugget, Range, Sill]                              
-    maxlim=[Sill,4.0*lag[kk-1],Sill*2.0]
-    best_vals, covar = curve_fit(spherical, lag, gamma, p0=init_vals) #,bounds=(0, maxlim) 
+    Range=lag[int(kk/2)]                                                            
+    init_vals = [Nugget, Range, Sill]
+    #define the maximum values
+    maxlim=[Sill,max(lag),max(gamma)]
+    #optios method : ‘lm’, ‘trf’, ‘dogbox’
+    best_vals, covar = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))
     Nugget=best_vals[0]
     Range=best_vals[1]
     Sill=best_vals[2]
@@ -242,9 +242,7 @@ def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): #
     semiModel[0][3]=sqr_esf
     # Gauss model
     Model="gauss"
-    init_vals = [Nugget, Range, Sill]     
-    maxlim=[Sill,4.0*lag[kk-1],Sill*2.0]
-    best_vals, covar = curve_fit(gauss, lag, gamma, p0=init_vals) #,bounds=(0, maxlim)   
+    best_vals, covar = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))   
     Nugget=best_vals[0]
     Range=best_vals[1]
     Sill=best_vals[2]
@@ -259,9 +257,7 @@ def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): #
     semiModel[1][3]=sqr_gas
     # Exponential model
     Model="exponential"
-    init_vals = [Nugget, Range, Sill] 
-    maxlim=[Sill,4.0*lag[kk-1],Sill*2.0]
-    best_vals, covar = curve_fit(exponential, lag, gamma, p0=init_vals) #,bounds=(0, maxlim)   
+    best_vals, covar = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))   
     Nugget=best_vals[0]
     Range=best_vals[1]
     Sill=best_vals[2]
@@ -298,8 +294,6 @@ def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): #
     # array to grid point
     nx=int((max(xlim)-min(xlim))/pixel)+10
     ny=int((max(ylim)-min(ylim))/pixel)+10
-    print ("Running kriging....")
-
     ###Results
     xgrid,ygrid,zkrig,ekrig=[],[],[],[] # z estimated by kriging  error in estimation by kriging
     for i in range(nx):
@@ -315,5 +309,4 @@ def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): #
                 ygrid.append(y1) # n-s coordinate
                 zkrig.append(zEstimated) # kriging value
                 ekrig.append(eEstimated) # # kriging errors
-    print ("Finished kriging....")
     return lag,gamma,gammaT,xgrid,ygrid,zkrig,ekrig

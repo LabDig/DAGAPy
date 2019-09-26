@@ -244,7 +244,7 @@
         </font>
        </property>
        <property name="text">
-        <string>LATITUDE:</string>
+        <string>COORDINATE X:</string>
        </property>
       </widget>
      </item>
@@ -262,7 +262,7 @@
         </font>
        </property>
        <property name="text">
-        <string>ATRIBUTE:</string>
+        <string>ATRIBUTE (Z):</string>
        </property>
       </widget>
      </item>
@@ -277,7 +277,7 @@
         </font>
        </property>
        <property name="text">
-        <string>LONGITUDE:</string>
+        <string>COORDINATE Y:</string>
        </property>
       </widget>
      </item>
@@ -1174,7 +1174,7 @@
         <number>1</number>
        </property>
        <property name="minimum">
-        <double>0.000000000000000</double>
+        <double>0.100000000000000</double>
        </property>
        <property name="maximum">
         <double>1.000000000000000</double>
@@ -1224,7 +1224,7 @@
         </font>
        </property>
        <property name="minimum">
-        <number>0</number>
+        <number>5</number>
        </property>
        <property name="maximum">
         <number>50</number>
@@ -1321,7 +1321,7 @@
         <number>1</number>
        </property>
        <property name="maximum">
-        <number>50</number>
+        <number>100</number>
        </property>
        <property name="value">
         <number>10</number>
@@ -1335,7 +1335,7 @@
      <rect>
       <x>4</x>
       <y>330</y>
-      <width>784</width>
+      <width>246</width>
       <height>51</height>
      </rect>
     </property>
@@ -1385,108 +1385,6 @@
        </property>
        <property name="value">
         <number>2</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_46">
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>50</weight>
-         <italic>false</italic>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>FUZZY EXPONENT:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="beta">
-       <property name="minimumSize">
-        <size>
-         <width>80</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>75</weight>
-         <italic>true</italic>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="decimals">
-        <number>2</number>
-       </property>
-       <property name="minimum">
-        <double>1.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>10.000000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.050000000000000</double>
-       </property>
-       <property name="value">
-        <double>1.250000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_45">
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>50</weight>
-         <italic>false</italic>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string># OF INTERACTION:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="max_int">
-       <property name="minimumSize">
-        <size>
-         <width>80</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>40</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>75</weight>
-         <italic>true</italic>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="minimum">
-        <number>2</number>
-       </property>
-       <property name="maximum">
-        <number>50</number>
-       </property>
-       <property name="value">
-        <number>15</number>
        </property>
       </widget>
      </item>

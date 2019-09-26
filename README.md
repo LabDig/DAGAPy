@@ -32,24 +32,27 @@ Keywords: Precision agriculture; Ordinary kriging; Clustering analysis; Yield ma
 
 ************************************************************
 Version : 1.2
-- The function for automatic calculate the contour was removed.
-- The user need to enter with limite coordinates.
-- Option to define the delimitter of dataset file and if coordinate is UTM or LatLong
+- The function for automatic calculate the contour was removed. The user need to enter with limite coordinates.
+- Add option to define the delimitter of dataset file and if coordinate system is metric (UTM) or geodesic (Latitude/Longitude).
+
+Dataset and limit file need to using the same delimitter and the same coordinate sytem (Latitude/Longitude or UTM). 
+
 - Function to embedded matplotlib graphics in PyQt was inserted
 - A bug in gauss function was adjusted.
+- Pandas function was used to read and write files
+- The clustering function was change to k-means, using scikit-learn python module
 
-Dataset and limit file need to using the same delimitter and the same utm coordinate.
+
 **********************************************************
-The results file it is save in a Res Directory.
-It is recommend create this directory, in the projetc directory
+Tips for use
 
-Before click in select dataset and select limite file, the delimitter need to be selected
-
-It is necessary informe if dataset coordinate already it is UTM
-
-The limite file need to b a header.
-First column need to be latitude (coordinate e-w) 
-Second column need to be longitude (coordinate n-s)
+-The result files it is save in a Res Directory.
+-It is recommend create this directory, in the projetc directory
+-Before click in select dataset and select limite file, the delimitter need to be selected
+-It is necessary informe if dataset coordinate already it is UTM
+-The limite file and dataset file need to have a header.
+-In limite file, first column need to be longitude (or coordinate e-w) 
+-In limite file,second column need to be latitude (or coordinate n-s)
 
 **********************************************************
 This software was tested in:
@@ -65,11 +68,15 @@ This repository contains:
 
 - Source Code : This folder contains the files of source code in Python 3.6
 
+- limite_spad.csv and limite_soybean.csv : Limite files for two dataset, used in tests
+
+- spad.csv and soybean.csv : Two dataset used in test,  using metric coordinate system (UTM) and geodesic coordinate system
+
 
 **************************************************************
-The results files is save in /DAGAPY/res folder
+The results files, in csv format, for filtering, kriging and clustering is save in /res folder
 ***************************************************************
-Instructions for use the source code (for users with experience in programming):
+Instructions for use the source code:
 
 -In Windows OS it is necessary to install a python compiler. You can use:
 
@@ -84,7 +91,7 @@ Or antoher python compiler
 Oficial python IDE : apt-get install idle3
 
 Anaconda: Search how to install tha Anacond Spyder in your distro.
-************************************************************
+-----------------------------------------------
 In Windows and Linux OS is necessary install specific python modules for use the software developed. For this, 
 it is necessary to use the pip comand of python. 
 
@@ -158,6 +165,11 @@ or
 conda install -c conda-forge utm  (in Anaconda)
 
 
+-Scikit-learn
+pip install  scikit-learn
+
+or
+conda install scikit-learn
 
 -----------------------------------------------
 Description of files in Source Code Folder:
@@ -170,18 +182,16 @@ data analysis : execute filtering, kriging and clustering
 In the tab Parameter, is possible to modify the default parameters
 This script automatically import the other script file as a python module.
 
+All operations it is performed using metric coordinate system
+
+RunCluster Function executes k-means clustering.
+By defaults, 2 classes are generated. 
+The scikit-learn module it is used 
+
 -----------------------------------------------
-soja_2017_t6_join.csv 
+DAGApy.ipynb 
 
-It is the dataset file used for software tests.
-This file contains a soybean yield data (2016/2017 yield), of a farm in São Paulo,Brazil
-
-spad.csv 
-Dataset file used in test
-
-limite.txt
-File that contain limite points
-
+File for use software in Anaconda Jupyter Notebook
 -----------------------------------------------
 filtering.py
 
@@ -203,14 +213,6 @@ The default distance for the grid is 10 m, but can be modified by user.
 The grid it is generate based on limite points informing by user.Three semivariogram models are fit : spherical, exponential and gauss. 
 The range, sill and nuuget automatic calculates for the three models. The selection criteria is to minimize the sum of square errors.
 Automatically, the software chooses the model that results in the lower sum of square errors.
-
-
------------------------------------------------
-clustering.py
-
-Software that executes fuzzy k-means clustering.
-By defaults, 2 classes are generated. 
-It is possible to modify the maximum number of iterations and beta fuzzy k-means factor.
 
 
 --------------------------------------------

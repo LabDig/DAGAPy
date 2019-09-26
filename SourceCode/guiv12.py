@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'guiv12.ui'
 #
-# Created by: PyQt5 UI code generator 5.10
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_dagapy(object):
     def setupUi(self, dagapy):
@@ -512,7 +514,7 @@ class Ui_dagapy(object):
         font.setWeight(75)
         self.max_dist.setFont(font)
         self.max_dist.setDecimals(1)
-        self.max_dist.setMinimum(0.0)
+        self.max_dist.setMinimum(0.1)
         self.max_dist.setMaximum(1.0)
         self.max_dist.setSingleStep(0.1)
         self.max_dist.setProperty("value", 0.6)
@@ -535,7 +537,7 @@ class Ui_dagapy(object):
         font.setItalic(True)
         font.setWeight(75)
         self.lag.setFont(font)
-        self.lag.setMinimum(0)
+        self.lag.setMinimum(5)
         self.lag.setMaximum(50)
         self.lag.setProperty("value", 15)
         self.lag.setObjectName("lag")
@@ -580,12 +582,12 @@ class Ui_dagapy(object):
         font.setWeight(75)
         self.gridsize.setFont(font)
         self.gridsize.setMinimum(1)
-        self.gridsize.setMaximum(50)
+        self.gridsize.setMaximum(100)
         self.gridsize.setProperty("value", 10)
         self.gridsize.setObjectName("gridsize")
         self.gridLayout_4.addWidget(self.gridsize, 3, 1, 1, 1)
         self.layoutWidget5 = QtWidgets.QWidget(self.option)
-        self.layoutWidget5.setGeometry(QtCore.QRect(4, 330, 784, 51))
+        self.layoutWidget5.setGeometry(QtCore.QRect(4, 330, 246, 51))
         self.layoutWidget5.setObjectName("layoutWidget5")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.layoutWidget5)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -613,54 +615,6 @@ class Ui_dagapy(object):
         self.n_clust.setProperty("value", 2)
         self.n_clust.setObjectName("n_clust")
         self.horizontalLayout.addWidget(self.n_clust)
-        self.label_46 = QtWidgets.QLabel(self.layoutWidget5)
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.label_46.setFont(font)
-        self.label_46.setObjectName("label_46")
-        self.horizontalLayout.addWidget(self.label_46)
-        self.beta = QtWidgets.QDoubleSpinBox(self.layoutWidget5)
-        self.beta.setMinimumSize(QtCore.QSize(80, 40))
-        self.beta.setMaximumSize(QtCore.QSize(80, 40))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setBold(True)
-        font.setItalic(True)
-        font.setWeight(75)
-        self.beta.setFont(font)
-        self.beta.setDecimals(2)
-        self.beta.setMinimum(1.0)
-        self.beta.setMaximum(10.0)
-        self.beta.setSingleStep(0.05)
-        self.beta.setProperty("value", 1.25)
-        self.beta.setObjectName("beta")
-        self.horizontalLayout.addWidget(self.beta)
-        self.label_45 = QtWidgets.QLabel(self.layoutWidget5)
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.label_45.setFont(font)
-        self.label_45.setObjectName("label_45")
-        self.horizontalLayout.addWidget(self.label_45)
-        self.max_int = QtWidgets.QSpinBox(self.layoutWidget5)
-        self.max_int.setMinimumSize(QtCore.QSize(80, 40))
-        self.max_int.setMaximumSize(QtCore.QSize(80, 40))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        font.setBold(True)
-        font.setItalic(True)
-        font.setWeight(75)
-        self.max_int.setFont(font)
-        self.max_int.setMinimum(2)
-        self.max_int.setMaximum(50)
-        self.max_int.setProperty("value", 15)
-        self.max_int.setObjectName("max_int")
-        self.horizontalLayout.addWidget(self.max_int)
         dagapy.addTab(self.option, "")
 
         self.retranslateUi(dagapy)
@@ -675,9 +629,9 @@ class Ui_dagapy(object):
         self.label_44.setText(_translate("dagapy", "DATA ACQUISITION"))
         self.label_54.setText(_translate("dagapy", "DATA ANALYSIS"))
         self.read_file.setText(_translate("dagapy", "READ DATASET FILE"))
-        self.label_30.setText(_translate("dagapy", "LATITUDE:"))
-        self.label_32.setText(_translate("dagapy", "ATRIBUTE:"))
-        self.label_31.setText(_translate("dagapy", "LONGITUDE:"))
+        self.label_30.setText(_translate("dagapy", "COORDINATE X:"))
+        self.label_32.setText(_translate("dagapy", "ATRIBUTE (Z):"))
+        self.label_31.setText(_translate("dagapy", "COORDINATE Y:"))
         self.label_33.setText(_translate("dagapy", "DELIMITER:"))
         self.delimiter.setItemText(0, _translate("dagapy", ","))
         self.delimiter.setItemText(1, _translate("dagapy", ";"))
@@ -708,11 +662,9 @@ class Ui_dagapy(object):
         self.label_52.setText(_translate("dagapy", "# OF NEIGHBOR:"))
         self.label_36.setText(_translate("dagapy", "GRID SIZE (M):"))
         self.label_53.setText(_translate("dagapy", "# OF CLASSES:"))
-        self.label_46.setText(_translate("dagapy", "FUZZY EXPONENT:"))
-        self.label_45.setText(_translate("dagapy", "# OF INTERACTION:"))
         dagapy.setTabText(dagapy.indexOf(self.option), _translate("dagapy", "CONFIGURATION PARAMETER"))
-
 from mplwidget import mplwidget
+
 
 if __name__ == "__main__":
     import sys
@@ -722,4 +674,3 @@ if __name__ == "__main__":
     ui.setupUi(dagapy)
     dagapy.show()
     sys.exit(app.exec_())
-

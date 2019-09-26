@@ -24,7 +24,6 @@ def find_PNeigborns(Dist, xx, yy, x, y, z):
 
 # remove data outside of admissible range
 def PreFilter(minV,maxV,x,y,z):
-    print ("Running pre filtering...")
     n=len(x)
     x_Prefil=[]
     y_Prefil=[]
@@ -41,14 +40,10 @@ def PreFilter(minV,maxV,x,y,z):
             z_del.append(z[i])
             y_del.append(y[i])
             x_del.append(x[i])
-    print ('Prefilter removed datas : before and after',len(x),len(x_del))
     return x_Prefil,y_Prefil,z_Prefil
-
-
 
 # Function to outiler filtering 
 def Outlier(Dist,out_factor,local_factor,x,y,z):
-    print ("Running outiler filtering...")
     n=len(x)
     # define sd_factor
     # if mean - sd_factor * sd < x[i] < meand + sd_factor * sd => the data is maintainned
@@ -84,13 +79,11 @@ def Outlier(Dist,out_factor,local_factor,x,y,z):
                 y_del.append(y[i])
                 x_del.append(x[i])
    # return result
-    print ('Outiler removed data : before and after',len(x),len(x_del))
     return x_Outfil,y_Outfil,z_Outfil
 
 
 # Function to inlier filtering (local filtering analysis)
 def Inlier(Dist,in_factor,x,y,z):
-    print ("Running inlier filtering...")
     n=len(x)
     # number of neigbhor to use
     z_Infil=[]
@@ -121,5 +114,4 @@ def Inlier(Dist,in_factor,x,y,z):
             z_del.append(z[i])
             y_del.append(y[i])
             x_del.append(x[i])
-    print ('Inlier removed data : before and after',len(x),len(x_del))
     return x_Infil,y_Infil,z_Infil
