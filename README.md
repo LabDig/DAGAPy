@@ -4,21 +4,6 @@ Data Acquistion and Geostatistic Analysis Python Software
 Software developed and published in Journal Computer and Eletronics in Agricultural.
 
 Manuscript title : An open-source spatial analysis system for embedded systems
-
-
-    DAGAPy is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    DAGAPy is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with DAGAPy.  If not, see <https://www.gnu.org/licenses/>6.
-    
 **************************************************************
 Authors of software
 
@@ -46,7 +31,7 @@ https://doi.org/10.1016/j.compag.2018.09.019.
 Keywords: Precision agriculture; Ordinary kriging; Clustering analysis; Yield map; Data filtering
 
 ************************************************************
-Version : 1.2
+Version : 1.3
 - The function for automatic calculate the contour was removed. The user need to enter with limite coordinates.
 
 - Add option to define the delimitter of dataset file and if coordinate system is metric (UTM) or geodesic (Latitude/Longitude).
@@ -61,7 +46,9 @@ Dataset and limit file need to using the same delimitter and the same coordinate
 
 - The clustering function was change to k-means, using scikit-learn python module
 
+- Correction of errors
 
+- Modifications to reduce the time of processing
 **********************************************************
 Tips for use
 
@@ -93,9 +80,7 @@ This repository contains:
 
 - Source Code : This folder contains the files of source code in Python 3.6
 
-- limite_spad.csv and limite_soybean.csv : Limite files for two dataset, used in tests
-
-- spad.csv and soybean.csv : Two dataset used in test,  using metric coordinate system (UTM) and geodesic coordinate system
+- Dataset : contain files used in tests
 
 
 **************************************************************
@@ -211,11 +196,6 @@ All operations it is performed using metric coordinate system
 RunCluster Function executes k-means clustering.
 By defaults, 2 classes are generated. 
 The scikit-learn module it is used 
-
------------------------------------------------
-DAGApy.ipynb 
-
-File for used Anaconda Jupyter Notebook
 
 -----------------------------------------------
 filtering.py
