@@ -1,14 +1,13 @@
 # See readme for information about this file.
 # import python modules
 #!/usr/bin/python3
-#V1.2- Modification in layout software and simplifications.
+#V1.3- Modification in layout software and simplifications.
 
 import os
 import sys
 import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog
-from PyQt5 import QtGui
 import utm
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -16,7 +15,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 # import python files
-from guiv12 import Ui_dagapy #graphical user interface script
+from gui import Ui_dagapy #graphical user interface script
 import kriging as kr #kriging script
 import filtering as fil # filtering script
 
@@ -40,6 +39,7 @@ class DagaPy(QtWidgets.QTabWidget,Ui_dagapy):
       self.select_limit_file.clicked.connect(self.LimiteFile)
       #button that read the dataset file
       self.read_file.clicked.connect(self.ReadFile)
+      
 
       ### In tab Filtering
       # run filter button
@@ -67,14 +67,20 @@ class DagaPy(QtWidgets.QTabWidget,Ui_dagapy):
       #
       #
       #
-      # Can be used by the user to add commands to read the sensor signals and save the data in a dataset file
+      # Can be used by the user to add commands to read the sensor signals 
+      #and save the data in a dataset file
       # 
       # 
       # 
 
+
+       
+       
    def SelectFile(self): # select file to data analysis
 
       fname = QFileDialog.getOpenFileName(self, 'Select Dataset File', '')
+      
+     
       #read the delimiter char select im combobox
       delimiter=self.delimiter.currentText()
       #
@@ -85,6 +91,7 @@ class DagaPy(QtWidgets.QTabWidget,Ui_dagapy):
       self.lat.clear()
       self.longi.clear()
       self.atribute.clear()
+      
       #Read name of columns of datrafame and add the items in combobox
       #list(self.dataset.columns) create a list of name of columns
       self.lat.addItems(list(self.dataset.columns))
@@ -93,12 +100,14 @@ class DagaPy(QtWidgets.QTabWidget,Ui_dagapy):
 
    def LimiteFile(self): # select file to limite
       fname = QFileDialog.getOpenFileName(self, 'Select Limite File', '')
+      
+      
       #read the delimiter char select im combobox
       delimiter=self.delimiter.currentText()
       #Read limites and transforme to a Pandas Datraframe
       self.limit=pd.read_csv(fname[0],sep=delimiter)
 
-   def ToUtm(self,Long,Lat):
+   def ToUtm(self,Long,Lat): #
       
       return utm.from_latlon(Lat,Long) #conv contain Xutm,Yutm,Zone Number, Zone Letter
 
@@ -106,8 +115,10 @@ class DagaPy(QtWidgets.QTabWidget,Ui_dagapy):
 
       # read in combox the item selected by user
       cx,cy,cz=self.lat.currentIndex(),self.longi.currentIndex(),self.atribute.currentIndex()
+      
+      
       #self.atribute_name it is used in plot's and export
-      self.atribute_name=self.dataset.columns[cz] #it is the name of atribute column
+      self.atribute_name=self.atribute.currentText() #it is the name of atribute column
       #
       #create x,y and z list from dataset. 
       self.x=self.dataset.iloc[:, cx]  #read colum with index cx
@@ -193,16 +204,35 @@ class DagaPy(QtWidgets.QTabWidget,Ui_dagapy):
 
 
    def RunKrig(self): # Function that run kriging 
+       
 
+      # Prepare the dataset to kriging
+      xyz=pd.DataFrame({'x':self.x,'y':self.y,'z':self.z})
+      
+      xylim=pd.DataFrame({'x':self.xlim,'y':self.ylim})
+       
       #Read configuration in Tab
       grid=self.gridsize.value() # read in spin box, the grid size
       nneig=self.neig.value() # neig number
       nlag=self.lag.value() # lag number
-      max_dist_factor=self.max_dist.value() # max dist factor to semivariogram
-      #
-      pID=tick=np.arange(len(self.x)) #create a point id list
-      self.lag,self.gamma,self.gammaT,self.xgrid,self.ygrid,self.zkrig,self.ekrig=kr.Main(grid,nneig,nlag,max_dist_factor,pID,self.x,self.y,self.z,\
-                                                                               self.xlim,self.ylim)
+      fator_max_dist=self.max_dist.value() # max dist factor to semivariogram
+
+      #Call function to generate the semivariogram 
+      lag,gamma,gammaT,model=kr.SemiVariogram(nlag,fator_max_dist,xyz)
+      #call function to generathe the grid
+      #In future, a xygrid file can be upload
+      xygrid=kr.Grid(grid,xylim)
+      #Call function to kriging
+      zkrig,ekrig=kr.Kriging(model,nneig,xygrid,xyz)
+         
+      # local to global
+      self.lag=lag
+      self.gamma=gamma
+      self.gammaT=gammaT
+      self.xgrid=xygrid[:,0]
+      self.ygrid=xygrid[:,1]
+      self.zkrig=zkrig
+      self.ekrig=ekrig
       # Call function that plot Semivariogram.
       self.ShowSemi()
       #Exports kriging points to csv file

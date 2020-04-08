@@ -1,11 +1,19 @@
 # See readme for information about this file.
-# The main function is named Main()
+'''
+Modified version, for reduce processing time
+
+'''
 #v1.1
 #!/usr/bin/python3
 
 import numpy as np
 from scipy.optimize import curve_fit
 import math
+import time
+import pandas as pd
+import itertools as it
+from scipy import spatial
+import matplotlib.path as mplPath
 import matplotlib.pyplot as plt
 
 # Semivariogram function
@@ -37,84 +45,27 @@ def gauss(h,Nugget,Range,Sill):
         gammag[i]=(Nugget+(Sill-Nugget)*(1-math.exp(-3.0*h[i]*h[i]/(Range*Range))))
     return gammag
 
-#Function to check if the point is inside or outside the region
-# True for inside and False for Outside
-def ray_tracing_method(x,y,xlim,ylim):
-    n = len(xlim)
-    inside = False
-    p1x=xlim[0]
-    p1y=ylim[0]
-    for i in range(n+1):
-        p2x = xlim[i%n]
-        p2y = ylim[i%n]
-        if y > min(p1y,p2y):
-            if y <= max(p1y,p2y):
-                if x <= max(p1x,p2x):
-                    if p1y != p2y:
-                        xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                    if p1x == p2x or x <= xints:
-                        inside = not inside
-        p1x=p2x
-        p1y=p2y
-    return inside
-
-# Function to find the nearest neighbor
-def find_PNeigborns(nNeig, xx, yy, pID, x, y, z):
-    k=len(x)
-    neigDist=np.zeros(nNeig)
-    neigID=np.zeros(nNeig)
-    neigZ=np.zeros(nNeig)
-    neigDist=np.zeros(nNeig)
-    for i in range(nNeig):
-        neigDist[i]=1E30
-    for i in range(k):
-        maxDist=neigDist[0]
-        maxJ=0
-        for j in range(nNeig):
-            if (maxDist<neigDist[j]):
-                maxDist=neigDist[j]
-                maxJ=j
-        deltaX=math.fabs(xx-x[i])
-        deltaY=math.fabs(yy-y[i])
-        distance=math.sqrt(deltaX*deltaX+deltaY*deltaY)
-        if(distance<=maxDist):
-            neigDist[maxJ]=distance
-            neigID[maxJ]=pID[i]
-            neigZ[maxJ]=z[i]
-    for i in range(nNeig-1):
-        minDist=neigDist[i]
-        minNum=i
-        minID=neigID[i]
-        minZ=neigZ[i]
-        for i in range(nNeig):
-            if(minDist>neigDist[j]):
-                minDist=neigDist[j]
-                minNum=j
-                minID=neigID[j]
-                minZ=neigZ[j]
-        if(i!=minNum):
-            neigDist[minNum]=neigDist[i]
-            neigID[minNum]=neigID[i]
-            neigZ[minNum]=neigZ[i]
-            neigDist[i]=minDist
-            neigID[i]=minID
-            neigZ[i]=minZ
-    return neigID,neigZ,neigDist
 
 # Function to calculate the covariance - Used to elaborate the covariance matrix	
-def covar_Funct(Model, Nugget, Range, Sill, Hh):
+def covar_Funct(Model,Hh):
+        
+      func=Model[0]
+      Nugget=Model[1]
+      Range=Model[2]
+      Sill=Model[3]
+      
       output=0.0
-      if (Model=="exponential"):
+      if (func=="Exponential"):
               if(Hh>0.0):
                   output=(Sill-Nugget)*math.exp(-3.0*Hh/Range)
               else:
                   output=Sill
-      if (Model=="gauss"):
+      if (func=="Gauss"):
               if(Hh>0.0):
                   output=(Sill-Nugget)*(1.0-math.exp(-3.0*Hh*Hh/(Range*Range)))
               else:
                   output=Range
-      if (Model=="spherical"):
+      if (func=="Spherical"):
               if(Hh>=Range):
                   output=0.0
               else:
@@ -126,187 +77,268 @@ def covar_Funct(Model, Nugget, Range, Sill, Hh):
       return output
     
 # Function to elaborate the covariance matrix
-def covarianceMatrix(nNeig, Model, Nugget, Range, Sill, neigID, neigZ, neigDist, x, y):
-    covM=np.zeros((nNeig+1,nNeig+1))
-    xDc=np.zeros(nNeig+1)
-    for j in range(0,nNeig):
-        for i in range(j+1,nNeig):
-            ik=int(neigID[i])
-            jk=int(neigID[j])
-            xx=math.sqrt((x[ik]-x[jk])*(x[ik]-x[jk])+(y[ik]-y[jk])*(y[ik]-y[jk]))
-            gamma=covar_Funct(Model,Nugget,Range,Sill,xx)
-            covM[i][j]=gamma
-            covM[j][i]=gamma
-    for i in range (0,nNeig):
-        covM[i][nNeig]=1.0
-        covM[nNeig][i]=1.0
-        xx=0
-        gamma=covar_Funct(Model,Nugget,Range,Sill,xx)
-        covM[i][i]=gamma
-        xx=neigDist[i]
-        gamma=covar_Funct(Model,Nugget,Range,Sill,xx)
-        xDc[i]=gamma
-    covM[nNeig][nNeig]=0.0
-    xDc[nNeig]=1.0
-    return covM, xDc
+def covarianceMatrix(n,Model, DistP2N, DistN2N):
+    
+    #n is size of matrix
+    #model its type, nugget ,range, sill
+    #neigZ it is z value of neigDist
+    #DistP2N it is distance of neigDist to grid point
+    #DistN2N it is distance of neighboor to neighboor
+    #covM it is the covariance matriz between the  neighboor
+    C=np.ones((n,n))
+    C[n-1][n-1]=0
+    #xDc it is the covariance array between and the grid point
+    D=np.ones(n)
+    #Build the covM matrix
+    # The covariance matrix it is estimaded using the fit model, based on distance
+    # DistP2N it is n-1 x n-1
+    
+    
+    for i in range(0,n-1):
+        for j in range(0,n-1):
+            C[i,j]=covar_Funct(Model,DistN2N[i][j])
+
+    for i in range(0,n-1):
+        D[i]=covar_Funct(Model,DistP2N[i])
+
+    #Return
+    return C, D
 
 # Function to execute the kriging
-def kriging(xx, yy, nNeig, Model, Nugget, Range, Sill, neigID, neigZ, neigDist, x, y):
+#Receive the model (type, nugget,range, sill), the distance of neighboor to grid point,
+#distance of neighboor to neighboor
+# the z value of each neighboor
+def exec_kriging(Model, DistP2N, DistN2N, neigZ):
+    
+    
+    #number of neighboor
+    nNeig=len(neigZ)
+    #This software do not use negative Weight
     negativeW=True
     k=0
-    n=nNeig+1-k
+    n=nNeig+1-k #matrix n+1 x n+1
+    
     while((negativeW==True) and (nNeig+1-k>=4)):
         n=nNeig+1-k
-        dummynNeig=nNeig-k
-        covM=np.zeros((n,n))
-        xDc=np.zeros(n)
-        b=np.zeros(n)
-        covM,xDc=covarianceMatrix(dummynNeig,Model,Nugget,Range,Sill,neigID,neigZ,neigDist,x,y)
-        for i in range(0,n):
-            b[i]=xDc[i]
-        xD=np.linalg.solve(covM,b)
+        #covM it is the covariance matriz between the  neighboors
+        #xDc it is the covariance array between and the grid point
+        #Call function to buid the matrix
+        #pass the number size of matriz , the model (type, nugget,range, sill),
+        #the distance p2n , n2n and 
+        covM,xDc=covarianceMatrix(n,Model, DistP2N, DistN2N)
+        # Solve xD=covM-1 *xDC . 
+        #xD= weight array and the Lagrange
+        xD=np.linalg.solve(covM,xDc)
+        # Check if have negative Weight
         negativeW=False
         for i in range(0,n-1):
-            if(xD[i]<0):
-                negativeW=True
+            if(xD[i]<0): negativeW=True
         if(negativeW==True):
             k=k+4;
+            #print ('Was found negative Weight. Reduce in 4 (for) the number of neig neighboors')
+    
+    # Calculate z and est, acoording GeoStatistics Books
     zEstimated=0.0
-    eEstimated=Sill
+    eEstimated=covM[0][0] #sill (COV[i,i]) it is used 
+    #
     for i in range(0,n-1):
         zEstimated=zEstimated+xD[i]*neigZ[i]    
         eEstimated=eEstimated-xD[i]*xDc[i]
-    eEstimated=eEstimated-xD[n-1]
-    if (eEstimated<0):
-        eEstimated=0.0
-    if(eEstimated>0.0):
-        eEstimated=math.sqrt(eEstimated)
+        
+    eEstimated=eEstimated-xD[n-1] #the last element its the Lagrange
+    #
+    if (eEstimated<0):  eEstimated=0.0
+    # This software use standart deviation of estimation
+    if(eEstimated>0.0):  eEstimated=math.sqrt(eEstimated)
+        
+    #Return estimation and standart deviation of estimation
     return zEstimated, eEstimated
 
-# Main function to perform kriging
-def Main(pixel,nNeig,kk,fator_max_dist,pID,x,y,z,xlim,ylim): # 
-
-    #Calculate the maximum distance between points
-
-    maxdist=0.0
-    n = len(z)
-    for i in range (0,n):
-        for j in range(i,n):
-            dist=math.sqrt((x[i]-x[j])*(x[i]-x[j])+(y[i]-y[j])*(y[i]-y[j]))
-            if dist>maxdist:
-                maxdist=dist
-
-    # Generate the experimental semivariogram
-    gamma=np.zeros(kk)
-    lag=np.zeros(kk)
-    num=np.zeros(kk)
-    for i in range (0,n-1):
-        for j in range(i,n):
-            dist=math.sqrt((x[i]-x[j])*(x[i]-x[j])+(y[i]-y[j])*(y[i]-y[j]))
-            k=int(kk*dist/(fator_max_dist*maxdist))   
-            if(k<=kk-1):
-                gamma[k]=gamma[k]+(z[i]-z[j])*(z[i]-z[j])
-                lag[k]=lag[k]+dist
-                num[k]=num[k]+1
-    for i in range(kk):
-        gamma[i]=gamma[i]/(2*num[i])
-        lag[i]=lag[i]/num[i]
-
+# Function to Generate Semivariogram
+def SemiVariogram(nlag,fator_max_dist,xyz): # 
+    
+    #nlag it is the number of lags
+    #fator_max_dist it is the active distance used in semivariogram
+    #xyz it is x,y and z experimental points
+    #Build a dataframe to save experimental semivariogram
+    var=pd.DataFrame()
+    #distance between all experimental points
+    var['lag']=spatial.distance.pdist(xyz.iloc[:,0:2], metric='euclidean')
+    #distance between z(i) e z(i+h) ==> (z(i)-z(i+h))**2
+    var['gamma']=[(y - x)**2 for x, y in it.combinations(xyz.iloc[:,2], 2)]
+    
+    #sort in crescent order acoording distance (lag)
+    #gamma ij follow the order
+    var=var.sort_values(by='lag')
+    #remove point if distance > max_dist * factor
+    remove_index=var[var['lag'] > fator_max_dist*max(var['lag']) ].index
+    var=var.drop(remove_index)
+    
+    #ranges to split lags
+    #max(var['lag'] it is new max distance after remove points
+    bins=np.arange(0,max(var['lag']),max(var['lag'])/nlag)
+    
+    #classify the distances according the range
+    ind = np.digitize(var['lag'],bins)
+    
+    #group lag e and calculate mean
+    lag=var['lag'].groupby(ind).mean()
+    lag=lag.to_numpy() #convert pandas series to numpy
+    #group gamma e calculate mean()/2, acoording matheron estimator
+    gamma=var['gamma'].groupby(ind).mean().div(2)
+    gamma=gamma.to_numpy() #convert pandas series to numpy
+    
     #Adjust the theoretical semivariogram model
-    semiModel=np.zeros((3,4))
-    # Spherical model
-    Model="spherical"
+   
     #Pick a random initial value for the nugget
     Nugget=(gamma[1]*lag[0]-gamma[0]*lag[1])/(lag[0]-lag[1])
     if Nugget<0: Nugget=gamma[0]
     #Pick a random initial value for the sill
-    Sill=(gamma[kk-4]+gamma[kk-3]+gamma[kk-2]+gamma[kk-1])/4.0             
+    Sill=(gamma[nlag-4]+gamma[nlag-3]+gamma[nlag-2]+gamma[nlag-1])/4.0             
     #kick the starting value for the range
-    Range=lag[int(kk/2)]                                                            
+    Range=lag[int(nlag/2)]                                                            
     init_vals = [Nugget, Range, Sill]
     #define the maximum values
     maxlim=[Sill,max(lag),max(gamma)]
-    #optios method : ‘lm’, ‘trf’, ‘dogbox’
-    best_vals, covar = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))
-    Nugget=best_vals[0]
-    Range=best_vals[1]
-    Sill=best_vals[2]
-    gammaT=np.zeros(kk)
-    gammaT=spherical(lag,Nugget,Range,Sill)
-    sqr_esf=0.0
-    for i in range(kk):
-        sqr_esf=sqr_esf+(gamma[i]-gammaT[i])*(gamma[i]-gammaT[i])
-    semiModel[0][0]=Nugget
-    semiModel[0][1]=Range
-    semiModel[0][2]=Sill
-    semiModel[0][3]=sqr_esf
-    # Gauss model
-    Model="gauss"
-    best_vals, covar = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))   
-    Nugget=best_vals[0]
-    Range=best_vals[1]
-    Sill=best_vals[2]
-    gammaT=np.zeros(kk)
-    gammaT=gauss(lag,Nugget,Range,Sill)
-    sqr_gas=0.0
-    for i in range(kk):
-        sqr_gas=sqr_gas+(gamma[i]-gammaT[i])*(gamma[i]-gammaT[i])
-    semiModel[1][0]=Nugget
-    semiModel[1][1]=Range
-    semiModel[1][2]=Sill
-    semiModel[1][3]=sqr_gas
-    # Exponential model
-    Model="exponential"
-    best_vals, covar = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))   
-    Nugget=best_vals[0]
-    Range=best_vals[1]
-    Sill=best_vals[2]
-    gammaT=np.zeros(kk)
-    gammaT=exponential(lag,Nugget,Range,Sill)
-    sqr_exp=0.0
-    for i in range(kk):
-        sqr_exp=sqr_exp+(gamma[i]-gammaT[i])*(gamma[i]-gammaT[i])
-    semiModel[2][0]=Nugget
-    semiModel[2][1]=Range
-    semiModel[2][2]=Sill
-    semiModel[2][3]=sqr_exp
-   # check the best fit model
-    Model='spherical' # 
-    imodelo=0
-    sqr_minimo=sqr_esf
-    if(sqr_minimo>sqr_gas):
-        sqr_minimo=sqr_gas
-        imodelo=1
-        Model='gauss'
-    if(sqr_minimo>sqr_exp):
-        sqr_minimo=sqr_exp
-        imodelo=2
-        Model='exponential'
-    Nugget=semiModel[imodelo][0]
-    Range=semiModel[imodelo][1]
-    Sill=semiModel[imodelo][2]
-    print ("The Semivariogram selected is....")
-    print ("Model,Nugget,Range,Sill used in semivariogram")
-    print (Model,Nugget,Range,Sill)
-    print ("")
+    
+    ###############################################################
+    #Fit Spherical Models
+    #return Nugget, Range , Sill and estimated covariance (not used)
+    [Nugget,Range,Sill] , _ = curve_fit(spherical, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))
 
+    
+    gammaT=np.zeros(nlag)
+    gammaT=spherical(lag,Nugget,Range,Sill)
+    #Calculate RMSE of fit
+    rmse=0.0
+    for i in range(nlag): rmse=rmse+(gamma[i]-gammaT[i])*(gamma[i]-gammaT[i])
+
+    # List of results fit of spherical model
+    model=['Spherical',Nugget,Range,Sill,rmse]
+    
+    print ('Model:',model[0],' Nugget:',model[1],' Range:',model[2],\
+           ' Sill:',model[3],' RMSE:',model[4],'\n')
+    
+    ###############################################################
+    #Fit Gauus Models
+    [Nugget,Range,Sill] , _  = curve_fit(gauss, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))   
+
+    gammaT=np.zeros(nlag)
+    gammaT=gauss(lag,Nugget,Range,Sill)
+    #Calculate RMSE of fit
+    rmse_2=0.0
+    for i in range(nlag):
+        rmse_2=rmse_2+(gamma[i]-gammaT[i])*(gamma[i]-gammaT[i])
+    
+    #If RMSE_2 its smaller than RMSE (model[4] == >  Gauss Fit Model it is better ==> update model list
+    # Else Spherical Fit Model it is better
+    if rmse_2 < model[4] : 
+        model=['Gauss',Nugget,Range,Sill,rmse_2]
+        print ('Gauss Fit Model it is better than Spherical Fit Model\n')
+        print ('Model:',model[0],' Nugget:',model[1],' Range:',model[2],\
+           ' Sill:',model[3],' RMSE:',model[4],'\n')
+    
+    else:
+         print ( model[0], ' Fit Model still it is better \n')
+    
+    ###############################################################
+    #Fit Exponentil Models
+
+    [Nugget,Range,Sill], _ = curve_fit(exponential, lag, gamma,method='trf', p0=init_vals,bounds=(0, maxlim))   
+ 
+    gammaT=np.zeros(nlag)
+    gammaT=exponential(lag,Nugget,Range,Sill)
+    #Calculate RMSE of fit
+    rmse_3=0.0
+    for i in range(nlag):
+        rmse_3=rmse_3+(gamma[i]-gammaT[i])*(gamma[i]-gammaT[i])
+    
+    #If RMSE_3 its smaller than RMSE (model[4]) == >  Exponential Fit Model it is better ==> update model list
+    # Else Spherical or Gauss Fit Model it is better
+    if rmse_3 < model[4] : 
+        model=['Exponential',Nugget,Range,Sill,rmse_3]
+        print ('Exponential Fit Model it is better than Spherical Fit Model\n')
+        print ('Model:',model[0],' Nugget:',model[1],' Range:',model[2],\
+           ' Sill:',model[3],' RMSE:',model[4],'\n')
+    
+    else:
+         print ( model[0], ' Fit Model still it is better \n')
+    
+    return lag,gamma,gammaT,model[0:4] # the RMSE it is not necessary
+
+###############################################################
+#Function to generate the grid,
+def Grid (grid,xylim):
+    
+    #grid is the size of grid, in meter
+    #xylim it is the pair of points that define the contour
     # Generate the grid to start the kriging process
-    # array to grid point
-    nx=int((max(xlim)-min(xlim))/pixel)+10
-    ny=int((max(ylim)-min(ylim))/pixel)+10
-    ###Results
-    xgrid,ygrid,zkrig,ekrig=[],[],[],[] # z estimated by kriging  error in estimation by kriging
-    for i in range(nx):
-        for j in range(ny):
-            x1=min(xlim)+(i-5)*pixel
-            y1=min(ylim)+(j-5)*pixel
-            if(ray_tracing_method(x1,y1,xlim,ylim)==True): # if poit grid is inside contour
-                # Find the nearest neighbor
-                neigID,neigZ,neigDist=find_PNeigborns(nNeig,x1,y1,pID,x,y,z)
-                #estimate the value of the variable and its error by kriging
-                zEstimated,eEstimated=kriging(x1,y1,nNeig,Model,Nugget,Range,Sill,neigID,neigZ,neigDist,x,y)
-                xgrid.append(x1) # e-w coordinate
-                ygrid.append(y1) # n-s coordinate
-                zkrig.append(zEstimated) # kriging value
-                ekrig.append(eEstimated) # # kriging errors
-    return lag,gamma,gammaT,xgrid,ygrid,zkrig,ekrig
+    #Find min and max of contour
+    x_min = xylim.iloc[:,0].min()
+    x_max = xylim.iloc[:,0].max()
+
+    y_min = xylim.iloc[:,1].min()
+    y_max = xylim.iloc[:,1].max()
+    
+    #Generate the grid
+    gridx = np.arange(x_min, x_max, grid)
+    gridy = np.arange(y_min, y_max, grid)
+    
+   
+    # Generate a polygon with contour
+    contours = mplPath.Path(np.array(xylim))
+    
+    # Generate a array with all grid points inside contour
+    #gridxy it is a n x 2 , where n its the number o points
+    gridxy=[]
+    #
+    # Run all combination of i and j points of grid
+    for i in gridx:
+        for j in gridy:
+            # if point it is internal of contour
+            if contours.contains_point((i,j)):
+                gridxy.append([i,j])
+    
+    #return a nx2 array with pair of point internal of contour
+    return np.array(gridxy)
+    
+
+#Function to execute kriging
+def Kriging (model,nneig,gridxy,xyz):
+   
+    #model contain type (shperical, exponential ou gauss), nugget, range and sil of
+    #fit semivariogram
+    #nneig it is the number of neigbor for interpolation
+    #gridxy it is the pair of point for interpolation
+    #xyz it is x, t and z of experimental points
+    #
+    #Build the tree to find neigboor
+    tree = spatial.KDTree(xyz.iloc[:,0:2])
+    
+    zkrig,ekrig=[],[] # z estimated by kriging  error in estimation by kriging
+    
+    # Run all combination of i and j points of grid
+    for i in gridxy:
+   
+        #find distance of neighboor to grid poitn
+        #and index of k neigboor
+        dist_p2n,index=tree.query((i[0],i[1]),k=nneig)
+        #pass the [model,nugget,range,sill,
+        #distance of neigbhoor to grid point
+        # distance of each neigbhoor with other neigbhoor
+        #and z value of neigbhoor
+        z_neig=xyz.iloc[index,2]
+            #find distance between neighboor
+        #find distance between neighboor
+        dist_n2n=spatial.distance.pdist(xyz.iloc[index,0:2], metric='euclidean')
+        # a square matrix n x n, with distance between the neighboor
+        dist_n2n=spatial.distance.squareform(dist_n2n)
+        z_est,e_est=exec_kriging(model,dist_p2n,dist_n2n,z_neig.to_numpy())
+        zkrig.append(z_est)
+        ekrig.append(e_est)
+    
+    #return it is estimation value and standart deviation of estimation
+    return np.array(zkrig),ekrig
+
+
+
